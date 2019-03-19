@@ -1,0 +1,315 @@
+<canvas id="canv" width="500" height="500" style="border: 1px solid;"></canvas>
+
+<script>
+    const Vector = {
+        COLINEAR: 0,
+        CLOCKWISE: 1,
+        COUNTERCLOCKWISE: 2,
+        add: function(v1, v2) {
+            if (v1.length != v2.length) {
+                throw new Error('Vector lengths not equal')
+            }
+
+            let out = []
+            for (var i = 0; i < v1.length; i++) {
+                out[i] = v1[i] + v2[i]
+            }
+            return out
+        },
+        sub: function(v1, v2) {
+            if (v1.length != v2.length) {
+                throw new Error('Vector lengths not equal')
+            }
+
+            let out = []
+            for (var i = 0; i < v1.length; i++) {
+                out[i] = v1[i] - v2[i]
+            }
+            return out
+        },
+        product: function(v1, v2) {
+            // TODO generalize
+
+            return v1[0]*v2[1] - v1[1] - v2[0]
+        },
+        intersect: function(p1, q1, p2, q2) {
+            const {orientation, onSegment} = Vector
+
+            // Find the four orientations needed for general and
+            // special cases
+            const o1 = orientation(p1, q1, p2);
+            const o2 = orientation(p1, q1, q2);
+            const o3 = orientation(p2, q2, p1);
+            const o4 = orientation(p2, q2, q1);
+
+            // General case
+            if (o1 != o2 && o3 != o4)
+                return true;
+
+            // Special Cases
+            // p1, q1 and p2 are colinear and p2 lies on segment p1q1
+            if (o1 == 0 && onSegment(p1, p2, q1)) return true;
+
+            // p1, q1 and p2 are colinear and q2 lies on segment p1q1
+            if (o2 == 0 && onSegment(p1, q2, q1)) return true;
+
+            // p2, q2 and p1 are colinear and p1 lies on segment p2q2
+            if (o3 == 0 && onSegment(p2, p1, q2)) return true;
+
+             // p2, q2 and q1 are colinear and q1 lies on segment p2q2
+            if (o4 == 0 && onSegment(p2, q1, q2)) return true;
+
+            return false; // Doesn't fall in any of the above cases
+        },
+        orientation: function(p, q, r) {
+            const val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1]);
+
+            if (val == 0) return Vector.COLINEAR;
+            return (val > 0) ? Vector.CLOCKWISE: Vector.COUNTERCLOCKWISE;
+        },
+        onSegment: function(p, q, r) {
+            const {max, min} = Math
+            return q[0] <= max(p[0], r[0]) && q[0] >= min(p[0], r[0]) &&
+                q[1] <= max(p[1], r[1]) && q[1] >= min(p[1], r[1])
+        },
+    }
+
+    class Piece {
+        static RIGHT = 0
+        static LEFT = 1
+        static OTHER = 2
+
+        constructor(x, y, vertices, color) {
+            if (vertices.length < 3) {
+                throw new Error('Too few vertices')
+            }
+
+            Object.assign(this, {
+                x, y, vertices, color,
+                rotation: 0,
+                isDragging: false,
+            })
+        }
+
+        // TODO rotation
+        draw(ctx) {
+            const {x, y, color, vertices} = this
+
+            ctx.fillStyle = color
+            ctx.beginPath()
+            ctx.moveTo(x + vertices[0][0], y + vertices[0][1])
+            for (var i = 1; i < vertices.length; i++) {
+                ctx.lineTo(x + vertices[i][0], y + vertices[i][1])
+            }
+            ctx.closePath()
+            ctx.fill()
+        }
+
+        collision(point) {
+            const {x, y, vertices} = this
+            const adjustedPoint = Vector.sub(point, [x, y])
+            let extreme = [Number.MAX_SAFE_INTEGER, adjustedPoint[1]]
+
+            let count = 0
+            let i = 0
+            do {
+                let next = (i + 1) % vertices.length
+
+                if (Vector.intersect(vertices[i], vertices[next], adjustedPoint, extreme)) {
+                    if (Vector.orientation(vertices[i], adjustedPoint, vertices[next]) == Vector.COLINEAR) {
+                        return Vector.onSegment(vertices[i], adjustedPoint, vertices[next])
+                    }
+                    count++
+                }
+
+                i = next
+            } while (i != 0);
+
+            // odd => true
+            return count % 2 == 1
+        }
+
+        offset(dx, dy) {
+            // TODO check
+
+            this.x += dx
+            this.y += dy
+        }
+
+        getSide(a, b) {
+            const x = Vector.product(a, b)
+            if (x < 0) {
+                return this.LEFT
+            } else if (x > 0) {
+                return this.RIGHT
+            } else {
+                return this.OTHER
+            }
+        }
+
+        rotate() {
+            const {vertices} = this
+            const angle = Math.PI / 4
+
+            for (var i = 0; i < vertices.length; i++) {
+                const vertex = vertices[i]
+                const [x, y] = vertex
+                const nx = x * Math.cos(angle) - y * Math.sin(angle)
+                const ny = y * Math.cos(angle) + x * Math.sin(angle)
+                vertex[0] = nx
+                vertex[1] = ny
+            }
+        }
+    }
+
+    const G = {}
+
+    window.onload=function() {
+        // TODO only allow single selected piece
+        const canv = document.getElementById("canv")
+        const ctx = canv.getContext("2d")
+        const BB = canv.getBoundingClientRect()
+        const offsetX = BB.left
+        const offsetY = BB.top
+        const WIDTH = canv.width
+        const HEIGHT = canv.height
+
+        Object.assign(G, {
+            ctx
+        })
+
+        // drag related
+        let dragOk = false
+        let startX
+        let startY
+
+        // draggable objects
+        const s = 50
+        const ss = Math.sqrt(2) * s
+        const pieces = []
+        pieces.push(new Piece(  0,   0, [[0, 0], [0, 1*s], [1*s, 0]], 'green'))
+        pieces.push(new Piece(  0,  50, [[0, 0], [0, 1*s], [1*s, 0]], 'purple'))
+        pieces.push(new Piece( 50,   0, [[0, 0], [0,  ss], [ ss, 0]], 'pink'))
+        pieces.push(new Piece(100,   0, [[0, 0], [0, 2*s], [2*s, 0]], 'yellow'))
+        pieces.push(new Piece( 50,  50, [[0, 0], [0, 2*s], [2*s, 0]], 'red'))
+        pieces.push(new Piece(  0, 100, [[0, 0], [0, 1*s], [1*s, 1*s], [1*s, 0]], 'orange'))
+        pieces.push(new Piece(100, 100, [[0, 0], [0,  s], [1*s, s+s], [1*s, 1*s]], 'teal'))
+
+        canv.onmousedown = myDown
+        canv.onmouseup = myUp
+        canv.onmousemove = myMove
+
+        document.addEventListener("keydown", keyPush)
+
+        draw()
+
+        function myDown(e) {
+            e.preventDefault()
+            e.stopPropagation()
+
+            const mx = parseInt(e.clientX-offsetX)
+            const my = parseInt(e.clientY-offsetY)
+
+            dragOk = false
+            for (var i = 0; i < pieces.length; i++) {
+                const piece = pieces[i]
+                if (piece.collision([mx, my])) {
+                    dragOk = true
+                    piece.isDragging = true
+                }
+            }
+
+            startX = mx
+            startY = my
+        }
+
+        function myUp(e) {
+            e.preventDefault()
+            e.stopPropagation()
+
+            dragOk = false
+            for (var i = 0; i < pieces.length; i++) {
+                const piece = pieces[i]
+                piece.isDragging = false
+            }
+        }
+
+        function myMove(e) {
+            // e.preventDefault()
+            // e.stopPropagation()
+
+            if (dragOk) {
+                const mx = parseInt(e.clientX-offsetX)
+                const my = parseInt(e.clientY-offsetY)
+
+                const dx = mx - startX
+                const dy = my - startY
+
+                for (var i = 0; i < pieces.length; i++) {
+                    const piece = pieces[i]
+                    if (piece.isDragging) {
+                        piece.offset(dx, dy)
+                    }
+                }
+
+                draw()
+
+                startX = mx
+                startY = my
+            }
+        }
+
+        function clear() {
+            ctx.clearRect(0, 0, canv.width, canv.height)
+        }
+
+        function draw() {
+            clear()
+            for (let piece of pieces) {
+                piece.draw(ctx)
+            }
+        }
+
+        function loadLevel() {
+            if (levelIndex >= levels.length) {
+                gameOver = true
+                return
+            }
+
+            loadedLevel = JSON.parse(JSON.stringify(levels[levelIndex]))
+
+            const { stage } = loadedLevel
+            for (let i = 0; i < stage.length; i++) {
+                if (stage[i] == GUY) {
+                    const {x, y} = indexToCoor(i)
+                    guy = new Guy(x, y)
+                }
+            }
+        }
+
+        function nextLevel() {
+            levelIndex += 1
+            loadLevel()
+        }
+
+        function keyPush(e) {
+            switch(e.key) {
+                case 'r':
+                    loadLevel()
+                    break;
+                case ' ':
+                    if (dragOk) {
+                        for (var i = 0; i < pieces.length; i++) {
+                            const piece = pieces[i]
+                            if (piece.isDragging) {
+                                piece.rotate()
+                            }
+                        }
+                        draw()
+                    }
+                    break;
+            }
+        }
+    }
+
+</script>
