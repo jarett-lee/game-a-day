@@ -1,0 +1,294 @@
+<canvas id="canv" width="400" height="400" style="border: 1px solid;"></canvas>
+<br>
+<button type="button" id="option1">attack</button>
+<button type="button" id="option2">attack</button>
+<button type="button" id="option3">attack</button>
+<button type="button" id="option4">attack</button>
+
+<style media="screen">
+button {
+	border: 1px;
+	height: 50px;
+	width: 100px;
+}
+
+button:disabled {
+	background-color: silver;
+}
+</style>
+
+<script>
+const spriteSize = 100
+
+var canv, ctx, gameOver, phase, newPhase, executeMove
+var pokedex, myPokemon, enemyPokemon, damageChart, options
+
+window.onload=function() {
+	canv = document.getElementById("canv")
+	ctx = canv.getContext("2d")
+
+	phase = 'attack'
+	requestID = window.requestAnimationFrame(loop)
+
+	var option1 = document.getElementById("option1")
+	var option2 = document.getElementById("option2")
+	var option3 = document.getElementById("option3")
+	var option4 = document.getElementById("option4")
+	options = []
+	options.push(option1)
+	options.push(option2)
+	options.push(option3)
+	options.push(option4)
+
+	init()
+}
+
+const moveset = {
+	'Tackle': {
+		name: 'Tackle',
+		type: 'None',
+		moveType: 'attack',
+		power: '10',
+		accuracy: '100',
+	},
+	'Be Square': {
+		name: 'Be Square',
+		type: 'Square',
+		moveType: 'attack',
+		power: '17',
+		accuracy: '90',
+	},
+	'Stubborn': {
+		name: 'Stubborn',
+		type: 'Square',
+		moveType: 'stat',
+		effect: 'defense',
+		modifier: 2,
+	},
+	'Poke': {
+		name: 'Poke',
+		type: 'Triangle',
+		moveType: 'attack',
+		power: '20',
+		accuracy: '90',
+	},
+	'Sharpen': {
+		name: 'Sharpen',
+		type: 'Triangle',
+		moveType: 'stat',
+		effect: 'attack',
+		modifier: 1,
+	},
+	'Roll': {
+		name: 'Roll',
+		type: 'Circle',
+		moveType: 'attack',
+		power: '15',
+		accuracy: '100',
+	},
+	'Round Out': {
+		name: 'Round Out',
+		type: 'Circle',
+		moveType: 'stat',
+		effect: 'speed',
+		modifier: 3,
+	},
+}
+
+function init() {
+	pokedex = {
+		'Square': {
+			name: 'Square',
+			type: 'Triangle',
+			hp: 100,
+			attack: 10,
+			defense: 5,
+			speed: 10,
+			draw: function(x, y) {
+				ctx.fillRect(x, y, spriteSize, spriteSize)
+			},
+			moves: [
+				moveset['Tackle'],
+				moveset['Be Square'],
+				moveset['Stubborn'],
+			],
+		},
+		'Triangle': {
+			name: 'Triangle',
+			type: 'Triangle',
+			hp: 100,
+			attack: 10,
+			defense: 5,
+			speed: 10,
+			draw: function(x, y) {
+				ctx.beginPath()
+				ctx.moveTo(x + spriteSize/2, y)
+				ctx.lineTo(x + spriteSize, y + spriteSize)
+				ctx.lineTo(x, y + spriteSize)
+				ctx.closePath()
+				ctx.stroke()
+			},
+			moves: [
+				moveset['Tackle'],
+				moveset['Poke'],
+				moveset['Sharpen'],
+			],
+		},
+		'Circle': {
+			name: 'Circle',
+			type: 'Circle',
+			hp: 100,
+			attack: 10,
+			defense: 5,
+			speed: 10,
+			draw: function(x, y) {
+				let r = spriteSize/2
+				ctx.beginPath()
+				ctx.arc(x + r, y + r, r, 0, 2*Math.PI)
+				ctx.stroke()
+			},
+			moves: [
+				moveset['Tackle'],
+				moveset['Roll'],
+				moveset['Round Out'],
+			],
+		},
+	}
+
+	damageChart = {
+		'Square': {
+			'Square': 1,
+			'Triangle': 0.8,
+			'Circle': 1.2,
+		},
+		'Triangle': {
+			'Square': 1.2,
+			'Triangle': 1,
+			'Circle': 0.8,
+		},
+		'Circle': {
+			'Square': 0.8,
+			'Triangle': 1.2,
+			'Circle': 1,
+		},
+		'None': {
+			'Square': 1,
+			'Triangle': 1,
+			'Circle': 1,
+		},
+	}
+
+	// Square > Circle > Triangle
+
+	myPokemon = pokedex['Square']
+	enemyPokemon = pokedex['Circle']
+
+	attackPhase()
+}
+
+function loop(timestamp) {
+	update()
+	draw()
+	if (!gameOver) {
+		window.requestAnimationFrame(loop)
+	}
+}
+
+function draw() {
+	ctx.font = "20px Arial";
+
+	ctx.clearRect(0, 0, canv.width, canv.height)
+
+	myPokemon.draw(50, 250)
+	ctx.fillText('Name: ' + myPokemon.name, 50, 200)
+	ctx.fillText('HP: ' + myPokemon.hp, 50, 225)
+	enemyPokemon.draw(250, 50)
+	ctx.fillText('Name: ' + enemyPokemon.name, 250, 200)
+	ctx.fillText('HP: ' + enemyPokemon.hp, 250, 225)
+}
+
+function createExecute(move, myMove) {
+	return function() {
+		newPhase = 'animation'
+		executeMove = {
+			move,
+			myMove,
+		}
+	}
+}
+
+function update() {
+	if (phase != newPhase) {
+		phase = newPhase
+		switch (phase) {
+			case 'attack':
+				attackPhase()
+				break;
+			case 'animation':
+				animationPhase()
+				actuallyExecuteMove()
+				enemyAttack()
+				break;
+			default:
+		}
+	}
+}
+
+function attackPhase() {
+	// setup buttons
+	for (let i = 0; i < 4; i++) {
+		const option = options[i]
+		const move = myPokemon.moves[i]
+		if (move) {
+			// enable button
+			option.disabled = false
+			option.innerText = move.name
+			option.onclick = createExecute(move, true)
+		} else {
+			option.disabled = true
+			option.innerText = 'None'
+		}
+	}
+}
+
+function animationPhase() {
+	// setup buttons
+	for (let i = 0; i < 4; i++) {
+		const option = options[i]
+		option.disabled = true
+	}
+	newPhase = 'attack'
+}
+
+function enemyAttack() {
+	let moveIndex = Math.floor(Math.random() * enemyPokemon.moves.length)
+	let move = enemyPokemon.moves[moveIndex]
+
+	executeMove = {
+		move,
+		myMove: false,
+	}
+
+	actuallyExecuteMove()
+}
+
+function actuallyExecuteMove() {
+	const {move, myMove} = executeMove
+
+	let p1 = myPokemon
+	let p2 = enemyPokemon
+
+	if (!myMove) {
+		p1 = enemyPokemon
+		p2 = myPokemon
+	}
+
+	if (move.moveType == 'attack') {
+		let sameBonus = p1.type == move.type ? 1.1 : 1
+		let typeBonus = damageChart[move.type][p2.type]
+		let damage = Math.floor(sameBonus * typeBonus * p1.attack * move.power / p2.defense)
+		p2.hp -= damage
+	}
+}
+
+</script>
