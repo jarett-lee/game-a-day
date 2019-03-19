@@ -3,6 +3,10 @@ new
     othello
     efficient road game (one-way vs two-way)
     rpg inventory
+    snake
+    pong
+    dr mario
+    puyo puyo
 
 refactor
     box dude
