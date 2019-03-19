@@ -1,0 +1,8 @@
+new
+    lemmings
+    othello
+    efficient road game (one-way vs two-way)
+    rpg inventory
+
+refactor
+    box dude
