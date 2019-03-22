@@ -16,5 +16,6 @@ new
 refactor
     box dude
     tangram
+    lemmings
 
     add instructions to games
