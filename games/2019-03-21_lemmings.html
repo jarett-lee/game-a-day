@@ -1,0 +1,390 @@
+<canvas id="canv" width="150" height="100" style="border: 1px solid;"></canvas>
+
+<button type="button" id="digButton">dig</button>
+<button type="button" id="bombButton">bomb</button>
+<button type="button" id="stairsButton">stairs</button>
+<button type="button" id="stopButton">stop</button>
+
+
+<style media="screen">
+canvas {
+    width: 600px;
+    height: 400px;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+button {
+    border: 1px;
+    height: 50px;
+    width: 100px;
+}
+</style>
+
+<script>
+    window.onload=function() {
+        // TODO only allow single selected piece
+        const canv = document.getElementById("canv")
+        const ctx = canv.getContext("2d")
+        const BB = canv.getBoundingClientRect()
+        const offsetX = BB.left
+        const offsetY = BB.top
+        const WIDTH = canv.width
+        const HEIGHT = canv.height
+
+        let SPAWN_COOLDOWN = 300
+        let time = 0
+
+        const BLOCK = 0
+        const EMPTY = 1
+
+        const stage1 = []
+        for (let i = 0; i < WIDTH; i++) {
+            stage1[i] = []
+            for (let k = 0; k < HEIGHT; k++) {
+                stage1[i][k] = BLOCK
+            }
+        }
+        let border = 10
+        for (let i = border; i < WIDTH-border; i++) {
+            for (let k = border; k < HEIGHT-border; k++) {
+                stage1[i][k] = EMPTY
+            }
+        }
+        for (let i = border; i < WIDTH-border; i++) {
+            stage1[i][Math.floor(HEIGHT/2)] = BLOCK
+        }
+        const spawn1 = [border, Math.floor(HEIGHT/2)-25]
+        let spawnLeft1 = 10
+
+        const JOBS = {
+            DIG: 0,
+            BOMB: 1,
+            STAIRS: 2,
+            STOP: 3,
+            WALK: 4,
+        }
+
+        let selectedJob = JOBS.DIG
+
+        document.getElementById('digButton').addEventListener('click', function() {
+            selectedJob = JOBS.DIG
+        })
+        document.getElementById('bombButton').addEventListener('click', function() {
+            selectedJob = JOBS.BOMB
+        })
+        document.getElementById('stairsButton').addEventListener('click', function() {
+            selectedJob = JOBS.STAIRS
+        })
+        document.getElementById('stopButton').addEventListener('click', function() {
+            selectedJob = JOBS.STOP
+        })
+
+
+        const GRAVITY = 1
+
+        const MOVE_SPEED = 1
+        const lemmings = []
+        const images = []
+        const sprites = []
+
+        const RIGHT = 0
+        const LEFT = 1
+
+        document.addEventListener("keydown", keyPush)
+        canv.onmousedown = myDown
+
+        class Lemming {
+            static sprite = null
+
+            constructor(x, y, job) {
+                Object.assign(this, {
+                    x, y,
+                    temp: 0,
+                    delay: 0,
+                    basePose: 0,
+                    extraPose: 0,
+                    extraPoseCount: 2,
+                    direction: RIGHT,
+                    climbHeight: 2,
+                    job: job || JOBS.WALK,
+                    done: false,
+                })
+            }
+
+            tick() {
+                this.delay = (this.delay + 1) % 15
+                if (this.delay == 0) {
+                    this.nextPose()
+
+                    this.attemptAction()
+                }
+            }
+
+            collision(x, y) {
+                const o = [2, 4, 2, 0]
+                return x >= this.x+o[0] &&
+                    x < this.x+Lemming.sprite.width-o[1] &&
+                    y >= this.x+o[2] &&
+                    x < this.x+Lemming.sprite.height-o[3]
+            }
+
+            validPosition(x, y) {
+                let o = [2, 4, 2, 0]
+                for (let i = x+o[0]; i < x+Lemming.sprite.width-o[1]; i++) {
+                    for (let j = y+o[2]; j < y+Lemming.sprite.height-o[3]; j++) {
+                        if (stage1[i][j] == BLOCK) {
+                            return false
+                        }
+                    }
+                }
+                return true
+            }
+
+            changeJob(job) {
+                this.job = job
+
+                this.extraPose = 0
+                switch (job) {
+                    case JOBS.WALK:
+                        this.basePose = 0
+                        this.extraPoseCount = 2
+                        break;
+                    case JOBS.DIG:
+                        this.basePose = 3
+                        this.extraPoseCount = 2
+                        break;
+                    case JOBS.BOMB:
+                        this.basePose = 7
+                        this.extraPoseCount = 3
+                        break;
+                    case JOBS.STAIRS:
+                        this.basePose = 5
+                        this.extraPoseCount = 2
+                        break;
+                    case JOBS.STOP:
+                        this.basePose = 2
+                        this.extraPoseCount = 1
+                        break;
+                    default:
+                }
+            }
+
+            attemptMove(dx, dy) {
+                const {x, y} = this
+                const nx = x + dx
+                const ny = y + dy
+                if (this.validPosition(nx, ny)) {
+                    this.x = nx
+                    this.y = ny
+                    return true
+                }
+            }
+
+            attemptAction() {
+                if (this.job == JOBS.WALK) {
+                    // if attemptMove succeeds, lemming is falling
+                    if (!this.attemptMove(0, GRAVITY)) {
+                        this.extraPoseCount = 2
+
+                        // otherwise, lemming is on ground and should walk
+                        let dir = (this.direction == RIGHT) ? 1 : -1
+
+                        for (var i = 0; i <= this.climbHeight; i++) {
+                            if (this.attemptMove(dir * MOVE_SPEED, i)) {
+                                return
+                            }
+                        }
+
+                        this.changeDirection()
+                    } else {
+                        this.extraPoseCount = 1
+                    }
+                } else if (this.job == JOBS.DIG) {
+                    if (this.attemptMove(0, GRAVITY)) {
+                        this.done = true
+                        this.extraPoseCount = 1
+                    }
+                    if (!this.done) {
+                        let k = this.y+Lemming.sprite.height
+                        let {x} = this
+                        for (let i = x; i < x+Lemming.sprite.width; i++) {
+                            stage1[i][k] = EMPTY
+                        }
+                    }
+                } else if (this.job == JOBS.BOMB) {
+
+                } else if (this.job == JOBS.STAIRS) {
+
+                } else if (this.job == JOBS.STOP) {
+
+                }
+            }
+
+            changeDirection() {
+                this.direction = (this.direction == LEFT) ? RIGHT : LEFT
+            }
+
+            nextPose() {
+                this.extraPose = (this.extraPose + 1) % this.extraPoseCount
+            }
+
+            pose() {
+                if (this.direction == RIGHT) {
+                    return this.basePose + this.extraPose
+                } else {
+                    return 10 + this.basePose + this.extraPose
+                }
+            }
+
+            draw() {
+                const {x, y} = this
+                if (this.direction == RIGHT) {
+                    Lemming.sprite.draw(x, y, this.pose())
+                } else {
+                    Lemming.sprite.draw(x-2, y, this.pose())
+                }
+            }
+        }
+
+        class Sprite {
+            constructor(img, width, height, poses) {
+                if (!poses) {
+                    poses = [[0, 0]]
+                }
+                Object.assign(this, {
+                    img,
+                    width,
+                    height,
+                    poses,
+                })
+            }
+
+            draw(x, y, poseIndex) {
+                if (!poseIndex) {
+                    poseIndex = 0
+                }
+                const pos = this.poses[poseIndex]
+                ctx.drawImage(
+                    this.img,
+                    pos[0],
+                    pos[1],
+                    this.width,
+                    this.height,
+                    x,
+                    y,
+                    this.width,
+                    this.height,
+                )
+            }
+        }
+
+        function loadImages(callback) {
+            const sources = {
+                'lemming': './resources/2019-03-21/lemming.png',
+            }
+            let remainingItems = Object.keys(sources).length
+
+            for (let key of Object.keys(sources)) {
+                const img = new Image()
+                img.src = sources[key]
+                images[key] = img
+                img.onload = function() {
+                    remainingItems -= 1
+                    if (remainingItems == 0) {
+                        callback()
+                    }
+                }
+            }
+        }
+
+        loadImages(init)
+
+        function init() {
+            let poses = []
+            for (var i = 0; i < 10; i++) {
+                poses.push([10*i, 0])
+            }
+            for (var i = 9; i >= 0; i--) {
+                poses.push([10*i, 20])
+            }
+            sprites['lemming'] = new Sprite(images['lemming'], 10, 20, poses)
+            Lemming.sprite = sprites['lemming']
+
+            loop()
+        }
+
+        function loop() {
+            update()
+            draw()
+            window.requestAnimationFrame(loop)
+        }
+
+        function update() {
+            for (let lemming of lemmings) {
+                lemming.tick()
+            }
+
+            if (time % SPAWN_COOLDOWN == 0 && spawnLeft1 > 0) {
+                lemmings.push(new Lemming(spawn1[0], spawn1[1]))
+                spawnLeft1 -= 1
+            }
+
+            time += 1
+        }
+
+        function draw() {
+            clear()
+            drawStage()
+            drawLemmings()
+        }
+
+        function clear() {
+            ctx.clearRect(0, 0, canv.width, canv.height)
+        }
+
+        function drawStage() {
+            for (let i = 0; i < WIDTH; i++) {
+                for (let k = 0; k < HEIGHT; k++) {
+                    if (stage1[i][k] == BLOCK) {
+                        ctx.fillRect(i, k, 1, 1)
+                    }
+                }
+            }
+        }
+
+        function drawLemmings() {
+            for (let lemming of lemmings) {
+                lemming.draw()
+            }
+        }
+
+        function keyPush(e) {
+            switch(e.key) {
+                case 'r':
+                    // TODO
+                    reloadStage()
+                    break;
+            }
+        }
+
+        function myDown(e) {
+            e.preventDefault()
+            e.stopPropagation()
+
+            const mx = parseInt((e.clientX-offsetX)/4)
+            const my = parseInt((e.clientY-offsetY)/4)
+
+            for (var i = 0; i < lemmings.length; i++) {
+                const lemming = lemmings[i]
+                if (lemming.collision(mx, my)) {
+                    lemming.changeJob(selectedJob)
+                    break
+                }
+            }
+        }
+    }
+
+</script>
