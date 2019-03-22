@@ -9,7 +9,12 @@ new
     puyo puyo
     brick break (paddle)
     bubble shooter (match 3 of a kind bubble colors)
+    sand game
+    dust game
+    balls game (iphone)
 
 refactor
     box dude
     tangram
+
+    add instructions to games
