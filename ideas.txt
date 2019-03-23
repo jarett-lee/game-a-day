@@ -12,6 +12,9 @@ new
     sand game
     dust game
     balls game (iphone)
+    marble run (super monkey ball)
+    piano
+    pinball
 
 refactor
     box dude
