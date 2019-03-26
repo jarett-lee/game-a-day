@@ -3,12 +3,10 @@ new
     othello
     efficient road game (one-way vs two-way)
     rpg inventory
-    snake
-    pong
     dr mario
     puyo puyo
     brick break (paddle)
-    bubble shooter (match 3 of a kind bubble colors)
+    bubble shooter (match 3 of a kind bubble colors) (puzzle bobble)
     sand game
     dust game
     balls game (iphone)
