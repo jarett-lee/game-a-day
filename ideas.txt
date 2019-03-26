@@ -13,6 +13,7 @@ new
     marble run (super monkey ball)
     piano
     pinball
+    minesweeper
 
 refactor
     box dude
