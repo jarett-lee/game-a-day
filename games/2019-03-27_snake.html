@@ -1,0 +1,256 @@
+<canvas id="canv" width="500" height="500" style="border: 1px solid;"></canvas>
+
+<div style="padding: 10px;">
+	<h1>Snake</h1>
+	<p>
+		Arrow Keys: Move
+	</p>
+</div>
+
+<script>
+	class Game {
+		static EMPTY = 0
+		static SNAKE = 1
+		static FOOD = 2
+
+		constructor(canvas) {
+			Object.assign(this, {
+				canvas,
+				ctx: canv.getContext('2d'),
+				squareSize: 25,
+				mspf: 200,
+			})
+
+			this.ctx.translate(0, 500);
+			this.ctx.scale(1, -1);
+		}
+
+		start() {
+			this.board = new Board(20, 20, Game.EMPTY)
+			this.snake = new Snake(this.board, this)
+			this.nextFrame = undefined
+			this.spawnFood()
+
+			document.addEventListener("keydown", keyPush)
+
+			const obj = this
+			function keyPush(e) {
+				switch(e.key) {
+					case 'ArrowLeft':
+						obj.snake.changeDirection(Snake.LEFT)
+						break;
+					case 'ArrowUp':
+						obj.snake.changeDirection(Snake.UP)
+						break;
+					case 'ArrowRight':
+						obj.snake.changeDirection(Snake.RIGHT)
+						break;
+					case 'ArrowDown':
+						obj.snake.changeDirection(Snake.DOWN)
+						break;
+				}
+			}
+
+			this.loop()
+		}
+
+		spawnFood() {
+			let x = parseInt(Math.random() * this.board.width)
+			let y = parseInt(Math.random() * this.board.height)
+			while (this.board.get(x, y) != Game.EMPTY) {
+				x = parseInt(Math.random() * this.board.width)
+				y = parseInt(Math.random() * this.board.height)
+			}
+			this.board.set(x, y, Game.FOOD)
+			this.foodLocation = {x, y}
+		}
+
+		loop(timestamp) {
+			if (!timestamp) {
+			} else if (!this.nextFrame) {
+				this.nextFrame = timestamp + this.mspf
+			} else if (timestamp >= this.nextFrame) {
+				this.nextFrame = timestamp + this.mspf
+
+				this.update()
+				this.draw()
+			}
+
+			const obj = this
+			window.requestAnimationFrame((timestamp) => obj.loop(timestamp))
+		}
+
+		end() {
+			this.start()
+		}
+
+		update() {
+			this.snake.update()
+		}
+
+		clear() {
+			this.ctx.clearRect(0, 0, canv.width, canv.height)
+		}
+
+		draw() {
+			this.clear()
+			const {ctx, snake, squareSize} = this
+
+			ctx.fillStyle = 'black'
+			for (var i = 0; i < snake.body.length; i++) {
+				const {x, y} = snake.body[i]
+
+				ctx.fillRect(
+					x * squareSize,
+					y * squareSize,
+					squareSize,
+					squareSize,
+				)
+			}
+
+			ctx.fillStyle = 'red'
+			const {x, y} = this.foodLocation
+			ctx.fillRect(
+				x * squareSize,
+				y * squareSize,
+				squareSize,
+				squareSize,
+			)
+		}
+	}
+
+	class Board {
+		constructor(width, height, defaultValue) {
+			const board = []
+			for (let i = 0; i < width; i++) {
+				board[i] = []
+				for (let j = 0; j < height; j++) {
+					board[i][j] = defaultValue
+				}
+			}
+			Object.assign(this, {
+				width, height, defaultValue, board,
+			})
+		}
+
+		set(x, y, val) {
+			this.board[x][y] = val
+		}
+
+		get(x, y) {
+			return this.board[x][y]
+		}
+
+		inBounds(x, y) {
+			return x >= 0 &&
+				x < this.width &&
+				y >= 0 &&
+				y < this.height
+		}
+	}
+
+	class Snake {
+		static UP = 1
+		static RIGHT = 2
+		static DOWN = 3
+		static UP = 4
+
+		constructor(board, game) {
+			this.board = board
+			this.game = game
+			this.grow = 0
+			this.direction = Snake.RIGHT
+			this.body = []
+			this.directionChanges = []
+
+			for (let i = 2; i >= 0; i--) {
+				this.body.push({
+					x: parseInt(board.width / 2) - i,
+					y: parseInt(board.height / 2),
+				})
+			}
+		}
+
+		possibleNewHeadDelta(dx, dy) {
+			const oldHead = this.head()
+			const newHead = {
+				x: oldHead.x + dx,
+				y: oldHead.y + dy,
+			}
+			return newHead
+		}
+
+		possibleNewHeadDir(dir) {
+			switch (dir) {
+				case Snake.UP:
+					return this.possibleNewHeadDelta(0, 1)
+				case Snake.DOWN:
+					return this.possibleNewHeadDelta(0, -1)
+				case Snake.LEFT:
+					return this.possibleNewHeadDelta(-1, 0)
+				case Snake.RIGHT:
+					return this.possibleNewHeadDelta(1, 0)
+				default:
+					throw 'Error: invalid snake direction'
+			}
+		}
+
+		changeDirection(dir) {
+			// TODO make movement nicer, make it easier to make u-turns by queuing movement
+			const newHead = this.possibleNewHeadDir(dir)
+			const prevHead = this.prevHead()
+			if (newHead.x != prevHead.x && newHead.y != prevHead.y) {
+				this.direction = dir
+			}
+		}
+
+		head() {
+			return this.body[this.body.length - 1]
+		}
+
+		prevHead() {
+			return this.body[this.body.length - 2]
+		}
+
+		tail() {
+			return this.body[0]
+		}
+
+		update() {
+			const head = this.possibleNewHeadDir(this.direction)
+
+			if (!this.board.inBounds(head.x, head.y) || this.board.get(head.x, head.y) == Game.SNAKE) {
+				this.game.end()
+				return
+			}
+			if (this.board.get(head.x, head.y) == Game.FOOD) {
+				this.grow += 1
+				this.game.spawnFood()
+			}
+
+			this.body.push(head)
+			this.board.set(head.x, head.y, Game.SNAKE)
+
+			if (this.grow > 0) {
+				this.grow -= 1
+			} else {
+				let tail = this.body.shift()
+				this.board.set(tail.x, tail.y, Game.EMPTY)
+			}
+		}
+	}
+
+	const G = {}
+
+	window.onload=function() {
+		const canv = document.getElementById("canv")
+
+		const game = new Game(canv)
+		game.start()
+
+		Object.assign(G, {
+			canv, game,
+		})
+	}
+
+</script>
