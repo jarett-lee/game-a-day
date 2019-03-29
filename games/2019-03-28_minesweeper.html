@@ -1,0 +1,267 @@
+<canvas id="canv" width="500" height="500" style="border: 1px solid;"></canvas>
+
+<div style="padding: 10px;">
+    <h1>Minesweeper</h1>
+    <p>
+        Left Click: Dig
+        <br>
+        Right Click: Flag
+    </p>
+</div>
+
+<script>
+    class Game {
+        static EMPTY = 0
+        static BOMB = 1
+
+        static OPEN = 0
+        static CLOSED = 1
+        static FLAG = 2
+
+        constructor(canvas) {
+            const BB = canvas.getBoundingClientRect()
+            const offsetX = BB.left
+            const offsetY = BB.top
+
+            Object.assign(this, {
+                canvas,
+                ctx: canv.getContext('2d'),
+                squareSize: 25,
+                mspf: 200,
+                BB, offsetX, offsetY,
+            })
+        }
+
+        init() {
+            this.boardWidth = 20
+            this.boardHeight = 20
+
+            this.canvas.onselectstart = () => false;
+            this.canvas.addEventListener('click', leftClick)
+            this.canvas.oncontextmenu = rightClick
+
+            const obj = this
+            function leftClick(e) {
+                e.preventDefault()
+                e.stopPropagation()
+
+                const mx = parseInt(e.clientX-obj.offsetX)
+                const my = parseInt(e.clientY-obj.offsetY)
+
+                const x = parseInt(mx/obj.squareSize)
+                const y = parseInt(my/obj.squareSize)
+
+                if (obj.openBoard.get(x, y) == Game.CLOSED) {
+                    if (obj.bombBoard.get(x, y) == Game.BOMB) {
+                        obj.end()
+                    } else {
+                        obj.spreadOpen(x, y)
+                    }
+                }
+
+                obj.update()
+                obj.draw()
+            }
+            function rightClick(e) {
+                e.preventDefault()
+                e.stopPropagation()
+
+                const mx = parseInt(e.clientX-obj.offsetX)
+                const my = parseInt(e.clientY-obj.offsetY)
+
+                const x = parseInt(mx/obj.squareSize)
+                const y = parseInt(my/obj.squareSize)
+
+                if (obj.openBoard.get(x, y) == Game.CLOSED) {
+                    obj.openBoard.set(x, y, Game.FLAG)
+                } else if (obj.openBoard.get(x, y) == Game.FLAG) {
+                    obj.openBoard.set(x, y, Game.CLOSED)
+                }
+
+                obj.update()
+                obj.draw()
+            }
+        }
+
+        spreadOpen(x, y) {
+            if (!this.openBoard.inBounds(x, y)) {
+                return
+            }
+            if (this.numberBoard.get(x, y) != 0) {
+                this.openBoard.set(x, y, Game.OPEN)
+                return
+            }
+            if (this.openBoard.get(x, y) == Game.OPEN) {
+                return
+            }
+            this.openBoard.set(x, y, Game.OPEN)
+
+            this.spreadOpen(x+1, y)
+            this.spreadOpen(x-1, y)
+            this.spreadOpen(x, y+1)
+            this.spreadOpen(x, y-1)
+            this.spreadOpen(x+1, y+1)
+            this.spreadOpen(x-1, y-1)
+            this.spreadOpen(x-1, y+1)
+            this.spreadOpen(x+1, y-1)
+        }
+
+        start() {
+            const width = this.boardWidth
+            const height = this.boardHeight
+            this.bombBoard = new Board(width, height, Game.EMPTY)
+            this.openBoard = new Board(width, height, Game.CLOSED)
+            this.numberBoard = new Board(width, height, 0)
+            this.placeBombs()
+
+            this.draw()
+        }
+
+        placeBombs() {
+            for (let i = 0; i < 45; i++) {
+                let x = parseInt(Math.random() * this.boardWidth)
+                let y = parseInt(Math.random() * this.boardHeight)
+                while (this.bombBoard.get(x, y) != Game.EMPTY) {
+                    x = parseInt(Math.random() * this.boardWidth)
+                    y = parseInt(Math.random() * this.boardHeight)
+                }
+                this.bombBoard.set(x, y, Game.BOMB)
+                this.numberBoard.safeSetDelta(x+1, y, 1)
+                this.numberBoard.safeSetDelta(x-1, y, 1)
+                this.numberBoard.safeSetDelta(x, y+1, 1)
+                this.numberBoard.safeSetDelta(x, y-1, 1)
+                this.numberBoard.safeSetDelta(x+1, y+1, 1)
+                this.numberBoard.safeSetDelta(x-1, y-1, 1)
+                this.numberBoard.safeSetDelta(x-1, y+1, 1)
+                this.numberBoard.safeSetDelta(x+1, y-1, 1)
+            }
+        }
+
+        end() {
+            this.start()
+        }
+
+        update() {
+        }
+
+        clear() {
+            this.ctx.clearRect(0, 0, canv.width, canv.height)
+        }
+
+        draw() {
+            this.clear()
+
+            const {ctx, squareSize} = this
+
+            for (let i = 0; i < this.boardWidth; i++) {
+                for (let j = 0; j < this.boardHeight; j++) {
+                    if (this.openBoard.get(i, j) == Game.OPEN) {
+                        if (this.bombBoard.get(i, j) == Game.BOMB) {
+                            ctx.fillStyle = 'red'
+                            ctx.fillRect(
+                                i * squareSize + 1,
+                                j * squareSize + 1,
+                                squareSize - 2,
+                                squareSize - 2,
+                            )
+                        } else {
+                            let val = this.numberBoard.get(i, j)
+                            ctx.font = "20px Arial"
+                            ctx.fillStyle = 'black'
+                            ctx.textAlign = "center"
+                            ctx.textBaseline = "middle"
+                            ctx.fillText(val, (i+0.5) * squareSize, (j+0.5) * squareSize, squareSize)
+                        }
+                    } else  {
+                        ctx.fillStyle = 'green'
+                        ctx.fillRect(
+                            i * squareSize + 1,
+                            j * squareSize + 1,
+                            squareSize - 2,
+                            squareSize - 2,
+                        )
+                        if (this.openBoard.get(i, j) == Game.FLAG) {
+                            ctx.fillStyle = 'blue'
+                            ctx.fillRect(
+                                i * squareSize + squareSize/4,
+                                j * squareSize + squareSize/4,
+                                squareSize - squareSize/2,
+                                squareSize - squareSize/2,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    class Board {
+        constructor(width, height, defaultValue) {
+            const board = []
+            for (let i = 0; i < width; i++) {
+                board[i] = []
+                for (let j = 0; j < height; j++) {
+                    board[i][j] = defaultValue
+                }
+            }
+            Object.assign(this, {
+                width, height, defaultValue, board,
+            })
+        }
+
+        set(x, y, val) {
+            this.board[x][y] = val
+        }
+
+        safeSet(x, y, val) {
+            if (this.inBounds(x, y)) {
+                this.board[x][y] = val
+                return true
+            } else {
+                return false
+            }
+        }
+
+        safeSetDelta(x, y, delta) {
+            if (this.inBounds(x, y)) {
+                this.board[x][y] += delta
+                return true
+            } else {
+                return false
+            }
+        }
+
+        get(x, y) {
+            return this.board[x][y]
+        }
+
+        safeGet(x, y) {
+            if (!this.inBounds(x, y)) {
+                return null
+            }
+            return this.get(x, y)
+        }
+
+        inBounds(x, y) {
+            return x >= 0 &&
+            x < this.width &&
+            y >= 0 &&
+            y < this.height
+        }
+    }
+
+    const G = {}
+
+    window.onload=function() {
+        const canv = document.getElementById("canv")
+
+        const game = new Game(canv)
+        game.init()
+        game.start()
+
+        Object.assign(G, {
+            canv, game,
+        })
+    }
+
+</script>
