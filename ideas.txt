@@ -13,7 +13,7 @@ new
     marble run (super monkey ball)
     piano
     pinball
-    minesweeper
+    mario
 
 refactor
     box dude
@@ -21,3 +21,8 @@ refactor
     lemmings
 
     add instructions to games
+
+other
+    learn game library
+    learn unity
+    create an extension
