@@ -14,6 +14,9 @@ new
     piano
     pinball
     mario
+    clicker game / idle game / incremental game
+    calculator
+        graphing calculator
 
 refactor
     box dude
