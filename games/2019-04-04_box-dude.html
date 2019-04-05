@@ -1,4 +1,18 @@
-<canvas id="canv" width="600" height="300" style="border: 1px solid;"></canvas>
+<div style="position: relative">
+	<canvas id="canv" width="600" height="300" style="border: 1px solid;"></canvas>
+	<svg id="grid" style="position: absolute; left: 0%; top: 0%; display: none;" width="600" height="300" xmlns="http://www.w3.org/2000/svg">
+			<defs>
+					<pattern id="smallGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+							<path d="M 30 0 L 0 0 0 30" fill="none" stroke="gray" stroke-width="0.5" stroke-dashoffset="2.5" stroke-dasharray="5,5" />
+					</pattern>
+					<pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+							<rect width="30" height="30" fill="url(#smallGrid)" />
+							<path d="M 30 0 L 0 0 0 30" fill="none" stroke="gray" stroke-width="1" />
+					</pattern>
+			</defs>
+			<rect width="100%" height="100%" fill="url(#smallGrid)" />
+	</svg>
+</div>
 
 <div style="padding: 10px;">
 	<h1>Box Dude</h1>
@@ -13,24 +27,29 @@
 		<br>
 		Backspace: Undo
 		<br>
-		Number (1-3): Change level
+		g: Toggle grid
+		<br>
+		Number (1-6): Change level
 	</p>
 	<p>
 		Changelog:
 		<ul>
-			<li>Replace previous levels with 3 new levels</li>
-			<li>Add scrolling</li>
-			<li>Add undo</li>
+			<li>Add 3 more levels (New levels are 2, 4, 6)</li>
+			<li>Add togglable grid</li>
 		</ul>
 	</p>
 	<p>
-		Version: 2
+		Version: 3
 		<br>
-		Previous: <a href="2019-03-17_block-dude.html">2019-03-17 Block Dude</a>
-		<br>
-		Next: <a href="2019-04-04_box-dude.html">2019-04-04 Block Dude</a>
+		Previous: <a href="2019-03-29_box-dude.html">2019-03-29 Block Dude</a>
 	</p>
 </div>
+
+<style media="screen">
+	p, ul, ol {
+		font-size: 24px;
+	}
+</style>
 
 <script>
 const height = 10
@@ -61,6 +80,7 @@ const EXIT = 9
 
 const levels = [
 	{
+		name: 'intro to controls',
 		height: 10,
 		width: 25,
 		stage: [
@@ -77,6 +97,7 @@ const levels = [
 		],
 	},
 	{
+		name: 'intro to block retrieval',
 		height: 10,
 		width: 25,
 		stage: [
@@ -89,6 +110,39 @@ const levels = [
 			1, 1, 1, 1, 1, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 2, 2, 0, 0, 0, 1, 0, 2, 0, 8, 0, 0, 2, 9, 0, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		],
+	},
+	{
+		name: 'intro to block management',
+		height: 10,
+		width: 25,
+		stage: [
+			1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 9, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 0, 8, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		],
+	},
+	{
+		height: 10,
+		width: 25,
+		stage: [
+			1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 0, 0, 0, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 0, 8, 0, 2, 2, 1, 0, 0, 1, 0, 0, 0, 2, 0, 2, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 2, 0, 2, 0, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 2, 9, 0, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		],
 	},
@@ -106,6 +160,23 @@ const levels = [
 			1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 8, 0, 0, 2, 0, 2, 1, 1, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+		],
+	},
+	{
+		name: 'sandbox',
+		height: 10,
+		width: 30,
+		stage: [
+			1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 2, 2, 0, 0, 0, 2, 0, 2, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 9, 0, 0, 0, 8, 2, 0, 2, 0, 2, 2, 2, 2, 0, 2, 0, 2, 0, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+			1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 		],
 	},
 ]
@@ -317,6 +388,8 @@ function moveGuy(dx, dy, firstAttempt) {
 
 		if (guy.holdingBlock) {
 			if (stage[di] == EXIT && stage[abovei] == OPEN) {
+				console.log('tag', di, abovei);
+				console.log('tag', stage[di], stage[abovei]);
 				nextLevel()
 				return
 			}
@@ -332,7 +405,7 @@ function moveGuy(dx, dy, firstAttempt) {
 					stage[oldabovei] = OPEN
 					stage[abovei] = BLOCK
 				}
-			} else if (firstAttempt) {
+			} else if (stage[di] != OPEN && firstAttempt) {
 				return moveGuy(dx, dy-1, false)
 			}
 		} else {
@@ -480,6 +553,15 @@ function stopHold() {
 	}
 }
 
+function toggleGrid() {
+	const el = document.getElementById('grid')
+	if (el.style.display == 'none') {
+		el.style.display = ''
+	} else {
+		el.style.display = 'none'
+	}
+}
+
 function keyPush(e) {
 	if ('1' <= e.key &&  e.key <= '9') {
 		levelIndex = parseInt(e.key)-1
@@ -508,6 +590,9 @@ function keyPush(e) {
 			break;
 		case 'r':
 			loadLevel()
+			break;
+		case 'g':
+			toggleGrid()
 			break;
 	}
 
