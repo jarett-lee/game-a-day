@@ -1,0 +1,103 @@
+<div>
+  <h2>Limit (incomplete)</h2>
+  <p>&forall;&epsilon;&gt;0 &exist;&delta;&gt;0 0&lt;|x - a|&lt;&delta; &rArr; |f(x) - L|&lt;&epsilon;</p>
+  <p>f(x) = x</p>
+  <p>limit of f(x) as x&rarr;0</p>
+  <p>&forall;&epsilon;&gt;0 &exist;&delta;&gt;0 0&lt;|x|&lt;&delta; &rArr; |f(x) - L|&lt;&epsilon;</p>
+  <p>&epsilon; = <input type="number" id="e1" name="" value=""></p>
+  <p>&delta; = <span id="d1"></span></p>
+</div>
+<div>
+  <h2>Estimate f(x) (incomplete)</h2>
+  <p>f(x) = e<sup>x</sup></p>
+  <p>f(x) = e<sup>x</sup> &asymp; 1 + x + x<sup>2</sup>/2! + ... + x<sup>n</sup>/n!</p>
+  <p>R<sub>n</sub> = e<sup>c</sup>x<sup>n</sup>/n!</p>
+  <p>precision = <input type="number" id="precision2" name="" value="0.005"></p>
+  <p>range = <input type="number" id="range2" name="" value="0.5"></p>
+  <p>Find n such that R<sub>n</sub>&lt;<span id="precisionA2"></span></p>
+
+  <p>R<sub>n</sub> = e<sup>c</sup>x<sup>n</sup>/n!</p>
+
+  <p>e<sup>c</sup>&lt;3<sup>c</sup>&lt;3<sup><span id="cA2"></span></sup>=<span id="eEstA2"></span></p>
+  <p>x = <span id="rangeA2"></span></p>
+
+
+  <p>n = <span id="n2"></span></p>
+  <p>R<sub><span id="nA2"></span></sub> = <span id="R2"></span></p>
+  <p>x = |<input type="number" id="x2" name="" value="0">| &lte; <span id="rangeB2"></span></p>
+  <p>f(x) = <span id="f(x)est2"></span></p>
+  <p>f(x) = <span id="f(x)2"></span></p>
+</div>
+
+<script>
+  const factorialMemoized = []
+  function factorial(n) {
+    if (n == 0 || n == 1) {
+      return 1
+    }
+    if (n in factorialMemoized) {
+      return factorialMemoized[n]
+    }
+    return factorialMemoized[n] = factorial(n-1) * n
+  }
+
+  window.onload=function() {
+    (() => {
+      let e = document.getElementById('e1');
+      let d = document.getElementById('d1');
+      let previousResult = 1
+
+      e.addEventListener('change', (event) => {
+        const result = event.target.value
+        if (result == '' || !isFinite(result)) {
+          event.target.value = previousResult
+        } else {
+          d.innerText = result.valueOf()
+          previousResult = result
+        }
+      })
+    })();
+
+    (() => {
+      const precisionEl = document.getElementById('precision2')
+      const rangeEl = document.getElementById('range2')
+      const nEl = document.getElementById('n2')
+
+      const rangeAEl = document.getElementById('rangeA2')
+      const rangeBEl = document.getElementById('rangeB2')
+      const cAEl = document.getElementById('cA2')
+      const eEstAEl = document.getElementById('eEstA2')
+      const precisionAEl = document.getElementById('precisionA2')
+
+      change()
+
+      function change() {
+        const precision = new Number(precisionEl.value)
+        const range = new Number(rangeEl.value)
+        const x = range
+        const c = parseInt(range + 0.5)
+        const eEst = Math.pow(3, c)
+        console.log(eEst);
+
+        for (let i = 0; i < 10000; i++) {
+          const err = (eEst * Math.pow(range, i))/factorial(i)
+          if (err * eEst < precision) {
+            n = i
+            break
+          }
+        }
+
+        nEl.innerText = n
+
+        eEstAEl.innerText = eEst
+        cAEl.innerText = c
+        precisionAEl.innerText = precision
+        rangeAEl.innerText = range
+        rangeBEl.innerText = range
+      }
+
+      precisionEl.addEventListener('change', change)
+      rangeEl.addEventListener('change', change)
+    })();
+  }
+</script>
