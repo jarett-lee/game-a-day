@@ -403,6 +403,7 @@ function keyPush(e) {
 				activePiece.x += 1
 			}
 			addPiece()
+			e.preventDefault();
 			break;
 		case 38:
 			removePiece()
@@ -411,6 +412,7 @@ function keyPush(e) {
 				activePiece.rotation -= 1
 			}
 			addPiece()
+			e.preventDefault();
 			break;
 		case 39:
 			removePiece()
@@ -419,6 +421,7 @@ function keyPush(e) {
 				activePiece.x -= 1
 			}
 			addPiece()
+			e.preventDefault();
 			break;
 		case 40:
 			removePiece()
@@ -427,6 +430,7 @@ function keyPush(e) {
 				activePiece.y -= 1
 			}
 			addPiece()
+			e.preventDefault();
 			break;
 	}
 }

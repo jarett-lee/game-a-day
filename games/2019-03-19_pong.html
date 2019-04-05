@@ -225,10 +225,12 @@
                 case 'ArrowUp':
                     activatePaddle(rightPaddle)
                     startMove(rightPaddle, e.key, -paddleVelocity)
+                    e.preventDefault();
                     break;
                 case 'ArrowDown':
                     activatePaddle(rightPaddle)
                     startMove(rightPaddle, e.key, paddleVelocity)
+                    e.preventDefault();
                     break;
             }
         }

@@ -465,18 +465,22 @@ function keyPush(e) {
 		case 'ArrowLeft':
 			updateUndo()
 			moveGuy(-1, 0, true)
+			e.preventDefault();
 			break;
 		case 'ArrowUp':
 			updateUndo()
 			moveGuy(0, -1, true)
+			e.preventDefault();
 			break;
 		case 'ArrowRight':
 			updateUndo()
 			moveGuy(1, 0, true)
+			e.preventDefault();
 			break;
 		case 'ArrowDown':
 			updateUndo()
 			moveGuy(0, 1, true)
+			e.preventDefault();
 			break;
 		case ' ':
 			togglePhase()

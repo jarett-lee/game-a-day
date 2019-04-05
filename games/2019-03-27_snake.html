@@ -33,15 +33,19 @@
 				switch(e.key) {
 					case 'ArrowLeft':
 						obj.snake.changeDirection(Snake.LEFT)
+						e.preventDefault();
 						break;
 					case 'ArrowUp':
 						obj.snake.changeDirection(Snake.UP)
+						e.preventDefault();
 						break;
 					case 'ArrowRight':
 						obj.snake.changeDirection(Snake.RIGHT)
+						e.preventDefault();
 						break;
 					case 'ArrowDown':
 						obj.snake.changeDirection(Snake.DOWN)
+						e.preventDefault();
 						break;
 				}
 			}

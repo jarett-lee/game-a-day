@@ -395,15 +395,19 @@ function keyPush(e) {
 	switch(e.key) {
 		case 'ArrowLeft':
 			moveGuy(-1, 0, true)
+			e.preventDefault();
 			break;
 		case 'ArrowUp':
 			startHold()
+			e.preventDefault();
 			break;
 		case 'ArrowRight':
 			moveGuy(1, 0, true)
+			e.preventDefault();
 			break;
 		case 'ArrowDown':
 			stopHold()
+			e.preventDefault();
 			break;
 		case 'r':
 			loadLevel()
