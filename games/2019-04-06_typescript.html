@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+	</head>
+	<body>
+		<div style="padding: 10px;">
+			<h1>TypeScript</h1>
+			<ul>
+				<li>atom-live-server</li>
+				<ul>
+					<li>html files require &#60;body&#62;&#60;/body&#62; so the server can inject the script</li>
+					<li>shortcut: command palette + StartS</li>
+					<li>shortcut (full): ctrl-shift-p + Atom Live Server: StartServer</li>
+					<li>shortcut: command palette + StopS</li>
+					<li>shortcut (full): ctrl-shift-p + Atom Live Server: StopServer</li>
+					<li>config file: .atom-live-server.json in root folder of atom</li>
+					<li>config options (command line): <a href="https://www.npmjs.com/package/live-server">https://www.npmjs.com/package/live-server</a></li>
+				</ul>
+				<li>atom-typescript</li>
+				<ul>
+					<li>all-in-one atom TypeScript plugin</li>
+					<li>conflicts with vim-mode-plus ctrl-r, fix using keymap.cson</li>
+					<li>config file: tsconfig.json in any folder</li>
+					<li>suggested settings:
+<pre>{
+  "compilerOptions": {
+    "strictNullChecks": true,
+    "target": "es6",
+    "sourceMap": true
+  },
+  "compileOnSave": true
+}
+</pre>
+					</li>
+					<li>config options: <a href="https://www.typescriptlang.org/docs/handbook/tsconfig-json.htm">https://www.typescriptlang.org/docs/handbook/tsconfig-json.html</a></li>
+					<li>config compiler options: <a href="https://www.typescriptlang.org/docs/handbook/compiler-options.html">https://www.typescriptlang.org/docs/handbook/compiler-options.html</a></li>
+					<li>source map help: <a href="https://www.gamefromscratch.com/post/2014/05/27/TypeScript-debugging-in-Visual-Studio-with-IE-Chrome-and-Firefox-using-Source-Maps.aspx">https://www.gamefromscratch.com/post/2014/05/27/TypeScript-debugging-in-Visual-Studio-with-IE-Chrome-and-Firefox-using-Source-Maps.aspx</a></li>
+				</ul>
+				<li>TypeScript</li>
+				<ul>
+					<li>summary: simple stuff good</li>
+					<li>complicated stuff:</li>
+					<ul>
+						<li>overloading is handled manually</li>
+						<ul>
+							<li><a href="https://www.typescriptlang.org/docs/handbook/functions.html">https://www.typescriptlang.org/docs/handbook/functions.html</a></li>
+							<li>creating a "instanceof" interface function, except check that it's an object first: <a href="https://stackoverflow.com/questions/14425568/interface-type-check-with-typescript">https://stackoverflow.com/questions/14425568/interface-type-check-with-typescript</a></li>
+						</ul>
+						<li>everything on this gets complicated <a href="https://www.typescriptlang.org/docs/handbook/advanced-types.html">https://www.typescriptlang.org/docs/handbook/advanced-types.html</a></li>
+					</ul>
+					<li>see TypeScript file for details</li>
+				</ul>
+			</ul>
+		</div>
+
+		<script type="text/javascript" src="resources/2019-04-06/manualLib.js" charset="utf-8"></script>
+		<script type="text/javascript" src="resources/2019-04-06/greeter.js" charset="utf-8"></script>
+	</body>
+</html>
