@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+	</head>
+	<body>
+		<div>
+			<h1>Handling Arbitrary Size Integers</h1>
+
+			<h2>Built-in integers</h2>
+			<p>
+				See: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER">MDN web docs MAX_SAFE_INTEGER</a>
+				<br>
+				See: <a href="https://developers.google.com/web/updates/2018/05/bigint">Chrome BigInt support</a>
+				<br>
+				<script>
+					(function() {
+						const max = Number.MAX_SAFE_INTEGER;
+						document.write("Number.MAX_SAFE_INTEGER = " + max);
+					})();
+				</script>
+				<br>
+				<script>
+					(function() {
+						const min = Number.MIN_SAFE_INTEGER;
+						document.write("Number.MIN_SAFE_INTEGER = " + min);
+					})();
+				</script>
+				<br>
+				<script>
+					(function() {
+						let out = ""
+						const m1 = Number.MAX_SAFE_INTEGER;
+						const m2 = Number.MAX_SAFE_INTEGER;
+						const eq = Number.MAX_SAFE_INTEGER;
+						out += "(Number.MAX_SAFE_INTEGER + 1 === Number.MAX_SAFE_INTEGER + 2) = "
+						out += `(${m1} === ${m2}) = `
+						out += `${m1 === m2}`
+						document.write(out);
+					})();
+				</script>
+			</p>
+
+			<h2>BigInteger</h2>
+			<form id="big-integer-form">
+				<input name="a" value="0" required pattern="[0-9]+"> + <input name="b" value="0" required pattern="[0-9]+"> = <output name="result"></output>
+				<button type="submit" name="submit">submit</button>
+			</form>
+		</div>
+
+		<script type="text/javascript" src="resources/2019-04-08/BigInteger.js" charset="utf-8"></script>
+		<script type="text/javascript" src="resources/2019-04-08/main.js" charset="utf-8"></script>
+	</body>
+</html>
