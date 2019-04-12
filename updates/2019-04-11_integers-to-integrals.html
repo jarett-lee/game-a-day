@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <ul>
+      <li>Links:</li>
+      <ul>
+        <li>Link to repo: <a href="https://github.com/jarett-lee/integers-to-integrals">https://github.com/jarett-lee/integers-to-integrals</a></li>
+        <li>Previous: <a href="./2019-04-10_integers-to-integrals.html">2019-04-10</a></li>
+      </ul>
+      <li>Goals:</li>
+      <ul>
+        <li>☑ Commit current work</li>
+        <li><s>☐ Cut out non-test related work</s></li>
+        <li><s>☐ Spend 30+ minutes making tests</s></li>
+      </ul>
+      <li>Added Goals:</li>
+      <ul>
+        <li>☑ Run tests in browser</li>
+        <li>☑ Compare BigInt in a test</li>
+      </ul>
+      <li>Progress:</li>
+      <ul>
+        <li>If I can run the tests in chrome, then I can use BigInt.</li>
+        <li>Got in-browser testing working locally</li>
+        <ul>
+          <li><a href="https://medium.com/dailyjs/running-mocha-tests-as-native-es6-modules-in-a-browser-882373f2ecb0">https://medium.com/dailyjs/running-mocha-tests-as-native-es6-modules-in-a-browser-882373f2ecb0</a></li>
+          <li><a href="https://mochajs.org/#running-mocha-in-the-browser">https://mochajs.org/</a></li>
+        </ul>
+        <li>Chai.expect().to.equal() uses JSON.stringify()</li>
+        <li>JSON.stringify(1n) Error: Do not know how to serialize a BigInt</li>
+        <li>Adding a custom chai matcher in typescript requires a type file</li>
+        <ul>
+          <li><a href="https://stackoverflow.com/questions/32452577/adding-chai-js-matchers-in-typescript">https://stackoverflow.com/questions/32452577/adding-chai-js-matchers-in-typescript</a></li>
+        </ul>
+      </ul>
+    </ul>
+  </body>
+</html>
