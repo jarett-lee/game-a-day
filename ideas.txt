@@ -1,4 +1,7 @@
 new
+    simulation
+        evolution
+        computer w/disk, ram, and a crash button
     lemmings
     othello
     efficient road game (one-way vs two-way)
