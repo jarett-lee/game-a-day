@@ -5,7 +5,10 @@ interface Pos {
   x: number,
   y: number,
 }
-interface Enemy extends Pos {}
+interface Enemy extends Pos {
+  initialHealth: number,
+  health: number,
+}
 interface Tower extends Pos {}
 
 
@@ -24,6 +27,7 @@ window.onload = function() {
   if (!ctxUnsafe) throw new Error('Unexpected null or undefined value')
   if (!(ctxUnsafe instanceof CanvasRenderingContext2D)) throw new Error('Unexpected type')
   const ctx = ctxUnsafe
+  ctx.translate(0.5, 0.5)
 
   // Define game logic
   // =================
@@ -64,6 +68,7 @@ window.onload = function() {
       const x = tower.x - size/2
       const y = tower.y - size/2
       ctx.fillRect(x, y, size, size)
+      ctx.strokeRect(x, y, size, size)
     }
 
     // draw enemy
@@ -73,7 +78,23 @@ window.onload = function() {
       const y = enemy.y - size/2
 
       // draw enemy body
+      ctx.save()
       ctx.fillRect(x, y, size, size)
+      ctx.strokeRect(x, y, size, size)
+      ctx.restore()
+
+      // draw enemy health bar
+      if (enemy.health != enemy.initialHealth) {
+        const healthYOffset = size/2 + 2
+        const healthHeight = 3
+        const healthFill = size * enemy.health / enemy.initialHealth
+        ctx.save()
+        ctx.fillStyle = 'red'
+        ctx.fillRect(x, y-healthYOffset, healthFill, healthHeight)
+        ctx.strokeStyle = 'black'
+        ctx.strokeRect(x, y-healthYOffset, size, healthHeight)
+        ctx.restore()
+      }
     }
 
     // draw projectiles
@@ -88,14 +109,16 @@ window.onload = function() {
 
   // Create enemies
   createEnemy({
-    x: 10,
-    y: 10,
+    x: 30,
+    y: 30,
+    initialHealth: 100,
+    health: 50,
   })
 
   // Create towers
   createTower({
-    x: 40,
-    y: 40,
+    x: 50,
+    y: 50,
   })
 
   // Start the game
