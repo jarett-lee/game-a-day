@@ -9,7 +9,16 @@ interface Enemy extends Pos {
   initialHealth: number,
   health: number,
 }
-interface Tower extends Pos {}
+interface Tower extends Pos {
+  shootCooldownMs: number,
+  nextShootTime: number,
+  damage: number,
+}
+interface Projectile {
+  origin: Pos,
+  target: Pos,
+  removalTime: number,
+}
 
 
 window.onload = function() {
@@ -34,6 +43,7 @@ window.onload = function() {
 
   const enemies: Enemy[] = []
   const towers: Tower[] = []
+  const projectiles: Projectile[] = []
 
   function createEnemy(enemy: Enemy) {
     enemies.push(enemy);
@@ -45,18 +55,53 @@ window.onload = function() {
     return tower;
   }
 
+  function createProjectile(projectile: Projectile) {
+    projectiles.push(projectile)
+    return projectile
+  }
+
   let start: number;
   function step(timestamp: number) {
     if (!start) start = timestamp;
 
-    update()
+    update(timestamp)
     draw()
     window.requestAnimationFrame(step)
   }
 
-  function update() {
-    // towers shoot (instant) projectiles at enemies
+  function findClosestEnemy(origin: Pos) {
+    return enemies.map(enemy => ({
+      distance: Math.abs(enemy.x - origin.x) + Math.abs(enemy.y - origin.y),
+      enemy: enemy,
+    })).reduce((prev, cur) => {
+      if (cur.distance < prev.distance) {
+        return cur;
+      }
+      return prev;
+    }).enemy;
+  }
+
+  function update(timestamp: number) {
+    // towers shoot projectiles at enemies
+    for (const tower of towers) {
+      if (tower.nextShootTime < timestamp) {
+        tower.nextShootTime = timestamp + tower.shootCooldownMs
+        createProjectile({
+          origin: tower,
+          target: findClosestEnemy(tower),
+          removalTime: timestamp + 200,
+        })
+      }
+    }
+
     // check if enemies are alive
+
+    // remove old projectiles
+    const filteredProjectiles = projectiles.filter((p) => p.removalTime > timestamp)
+    projectiles.length = filteredProjectiles.length
+    for (let i=0; i<filteredProjectiles.length; i++) {
+      projectiles[i] = filteredProjectiles[i];
+    }
   }
 
   function draw() {
@@ -98,6 +143,12 @@ window.onload = function() {
     }
 
     // draw projectiles
+    for (const p of projectiles) {
+      ctx.beginPath()
+      ctx.moveTo(p.origin.x, p.origin.y)
+      ctx.lineTo(p.target.x, p.target.y)
+      ctx.stroke()
+    }
   }
 
   function clear() {
@@ -114,11 +165,27 @@ window.onload = function() {
     initialHealth: 100,
     health: 50,
   })
+  createEnemy({
+    x: 200,
+    y: 200,
+    initialHealth: 100,
+    health: 200,
+  })
 
   // Create towers
   createTower({
     x: 50,
     y: 50,
+    shootCooldownMs: 1000,
+    nextShootTime: 0,
+    damage: 5,
+  })
+  createTower({
+    x: 250,
+    y: 200,
+    shootCooldownMs: 1000,
+    nextShootTime: 0,
+    damage: 5,
   })
 
   // Start the game
