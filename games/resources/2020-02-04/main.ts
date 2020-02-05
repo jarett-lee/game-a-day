@@ -70,7 +70,7 @@ window.onload = function() {
   }
 
   function findClosestEnemy(origin: Pos) {
-    return enemies.map(enemy => ({
+    return enemies.length > 0 ? enemies.map(enemy => ({
       distance: Math.abs(enemy.x - origin.x) + Math.abs(enemy.y - origin.y),
       enemy: enemy,
     })).reduce((prev, cur) => {
@@ -78,7 +78,7 @@ window.onload = function() {
         return cur;
       }
       return prev;
-    }).enemy;
+    }).enemy : undefined;
   }
 
   function update(timestamp: number) {
@@ -86,15 +86,24 @@ window.onload = function() {
     for (const tower of towers) {
       if (tower.nextShootTime < timestamp) {
         tower.nextShootTime = timestamp + tower.shootCooldownMs
-        createProjectile({
-          origin: tower,
-          target: findClosestEnemy(tower),
-          removalTime: timestamp + 200,
-        })
+        const target = findClosestEnemy(tower)
+        if (target) {
+          createProjectile({
+            origin: tower,
+            target,
+            removalTime: timestamp + 200,
+          })
+          target.health -= tower.damage
+        }
       }
     }
 
     // check if enemies are alive
+    const filteredEnemies = enemies.filter((enemy) => enemy.health > 0)
+    enemies.length = filteredEnemies.length
+    for (let i=0; i<filteredEnemies.length; i++) {
+      enemies[i] = filteredEnemies[i];
+    }
 
     // remove old projectiles
     const filteredProjectiles = projectiles.filter((p) => p.removalTime > timestamp)
