@@ -22,15 +22,48 @@ interface Projectile {
 }
 type Path = Coordinate[]
 
-class Enemy implements EnemyPrototype {
+interface Updatable {
+  update: () => void;
+}
+
+class Enemy implements EnemyPrototype, Updatable {
   coordinate: Coordinate
   prototype: EnemyPrototype
   health: number
+  path: Path
+  nextPathIndex: number
 
-  constructor(prototype: EnemyPrototype, coordinate: Coordinate) {
+  constructor(prototype: EnemyPrototype, coordinate: Coordinate, path: Path) {
     this.coordinate = coordinate
     this.prototype = prototype
     this.health = prototype.health
+    this.path = path
+    this.nextPathIndex = 0
+  }
+
+  update() {
+    let targetPosition = this.path[this.nextPathIndex]
+
+    if (this.x === targetPosition.x && this.y === targetPosition.y) {
+      this.nextPathIndex = (this.nextPathIndex + 1) % this.path.length
+      // if (this.path.length <= this.nextPathIndex) {
+      //   // delete this
+      //   return
+      // }
+      targetPosition = this.path[this.nextPathIndex]
+    }
+
+    if (this.x < targetPosition.x) {
+      this.x += 1
+    } else if (this.x > targetPosition.x) {
+      this.x -= 1
+    }
+
+    if (this.y < targetPosition.y) {
+      this.y += 1
+    } else if (this.y > targetPosition.y) {
+      this.y -= 1
+    }
   }
 
   get x() { return this.coordinate.x }
@@ -70,6 +103,8 @@ window.onload = function() {
   // create path
   const path: Path = [
     {x: 0, y: 0},
+    {x: 200, y: 20},
+    {x: 200, y: 300},
     {x: 500, y: 400},
   ]
 
@@ -77,8 +112,11 @@ window.onload = function() {
   const towers: Tower[] = []
   const projectiles: Projectile[] = []
 
+  const entities: Updatable[] = []
+
   function createEnemy(enemy: Enemy) {
     enemies.push(enemy)
+    entities.push(enemy)
     return enemy
   }
 
@@ -97,7 +135,7 @@ window.onload = function() {
     if (!start) start = timestamp
 
     update(timestamp)
-    draw()
+    render()
     window.requestAnimationFrame(step)
   }
 
@@ -114,6 +152,10 @@ window.onload = function() {
   }
 
   function update(timestamp: number) {
+    for (const entity of entities) {
+      entity.update()
+    }
+
     // towers shoot projectiles at enemies
     for (const tower of towers) {
       if (tower.nextShootTime < timestamp) {
@@ -150,7 +192,7 @@ window.onload = function() {
     }
   }
 
-  function draw() {
+  function render() {
     clear()
 
     // draw path
@@ -206,7 +248,7 @@ window.onload = function() {
   }
 
   function clear() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.clearRect(0-1, 0-1, canvas.width+1, canvas.height+1)
   }
 
   // Start the game
@@ -217,21 +259,21 @@ window.onload = function() {
     health: 100,
   }
 
-  createEnemy(new Enemy(enemyPrototype, {x: 30, y: 30}))
-  createEnemy(new Enemy(enemyPrototype, {x: 200, y: 200}))
+  createEnemy(new Enemy(enemyPrototype, {x: 30, y: 30}, path))
+  createEnemy(new Enemy(enemyPrototype, {x: 200, y: 200}, path))
 
   // create towers
   createTower({
     x: 50,
-    y: 50,
+    y: 70,
     shootCooldownMs: 1000,
     nextShootTime: 0,
     damage: 5,
   })
   createTower({
-    x: 250,
+    x: 350,
     y: 200,
-    shootCooldownMs: 1000,
+    shootCooldownMs: 700,
     nextShootTime: 0,
     damage: 5,
   })
