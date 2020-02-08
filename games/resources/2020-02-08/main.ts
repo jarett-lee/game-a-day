@@ -42,28 +42,18 @@ class Enemy implements EnemyPrototype, Updatable {
   }
 
   update() {
-    let targetPosition = this.path[this.nextPathIndex]
+    let targetCoordinate = this.path[this.nextPathIndex]
 
-    if (this.x === targetPosition.x && this.y === targetPosition.y) {
+    if (this.x === targetCoordinate.x && this.y === targetCoordinate.y) {
       this.nextPathIndex = (this.nextPathIndex + 1) % this.path.length
       // if (this.path.length <= this.nextPathIndex) {
       //   // delete this
       //   return
       // }
-      targetPosition = this.path[this.nextPathIndex]
+      targetCoordinate = this.path[this.nextPathIndex]
     }
 
-    if (this.x < targetPosition.x) {
-      this.x += 1
-    } else if (this.x > targetPosition.x) {
-      this.x -= 1
-    }
-
-    if (this.y < targetPosition.y) {
-      this.y += 1
-    } else if (this.y > targetPosition.y) {
-      this.y -= 1
-    }
+    this.coordinate = moveToTarget(this.coordinate, targetCoordinate, 1)
   }
 
   get x() { return this.coordinate.x }
@@ -73,6 +63,23 @@ class Enemy implements EnemyPrototype, Updatable {
   get initialHealth() { return this.prototype.health }
 }
 
+// assume distanceToTravel is a positive number
+function moveToTarget(currentCoordinate: Coordinate, targetCoordinate: Coordinate, distanceToTravel: number): Coordinate {
+  const xDistance = targetCoordinate.x - currentCoordinate.x
+  const yDistance = targetCoordinate.y - currentCoordinate.y
+  const remainingDistance = Math.sqrt((Math.pow(xDistance, 2) + Math.pow(yDistance, 2)))
+  const xDirection = xDistance / remainingDistance
+  const yDirection = yDistance / remainingDistance
+
+  if (distanceToTravel > remainingDistance) {
+    return { x: targetCoordinate.x, y: targetCoordinate.y }
+  }
+
+  const newX = currentCoordinate.x + xDirection * distanceToTravel
+  const newY = currentCoordinate.y + yDirection * distanceToTravel
+
+  return { x: newX, y: newY }
+}
 
 window.onload = function() {
   // Get html elements
@@ -280,4 +287,8 @@ window.onload = function() {
 
   // start the game
   window.requestAnimationFrame(step)
+
+  // document.addEventListener("keydown", function() {
+  //   step(0)
+  // });
 }
