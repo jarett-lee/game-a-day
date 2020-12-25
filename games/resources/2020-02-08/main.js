@@ -1,16 +1,44 @@
 "use strict";
 console.log('reload', Math.random());
 class Enemy {
-    constructor(prototype, coordinate) {
+    constructor(prototype, coordinate, path) {
         this.coordinate = coordinate;
         this.prototype = prototype;
         this.health = prototype.health;
+        this.path = path;
+        this.nextPathIndex = 0;
+    }
+    update() {
+        let targetCoordinate = this.path[this.nextPathIndex];
+        if (this.x === targetCoordinate.x && this.y === targetCoordinate.y) {
+            this.nextPathIndex = (this.nextPathIndex + 1) % this.path.length;
+            // if (this.path.length <= this.nextPathIndex) {
+            //   // delete this
+            //   return
+            // }
+            targetCoordinate = this.path[this.nextPathIndex];
+        }
+        this.coordinate = moveToTarget(this.coordinate, targetCoordinate, 1);
     }
     get x() { return this.coordinate.x; }
     set x(val) { this.coordinate.x = val; }
     get y() { return this.coordinate.y; }
     set y(val) { this.coordinate.y = val; }
     get initialHealth() { return this.prototype.health; }
+}
+// assume distanceToTravel is a positive number
+function moveToTarget(currentCoordinate, targetCoordinate, distanceToTravel) {
+    const xDistance = targetCoordinate.x - currentCoordinate.x;
+    const yDistance = targetCoordinate.y - currentCoordinate.y;
+    const remainingDistance = Math.sqrt((Math.pow(xDistance, 2) + Math.pow(yDistance, 2)));
+    const xDirection = xDistance / remainingDistance;
+    const yDirection = yDistance / remainingDistance;
+    if (distanceToTravel > remainingDistance) {
+        return { x: targetCoordinate.x, y: targetCoordinate.y };
+    }
+    const newX = currentCoordinate.x + xDirection * distanceToTravel;
+    const newY = currentCoordinate.y + yDirection * distanceToTravel;
+    return { x: newX, y: newY };
 }
 window.onload = function () {
     // Get html elements
@@ -37,13 +65,17 @@ window.onload = function () {
     // create path
     const path = [
         { x: 0, y: 0 },
+        { x: 200, y: 20 },
+        { x: 200, y: 300 },
         { x: 500, y: 400 },
     ];
     const enemies = [];
     const towers = [];
     const projectiles = [];
+    const entities = [];
     function createEnemy(enemy) {
         enemies.push(enemy);
+        entities.push(enemy);
         return enemy;
     }
     function createTower(tower) {
@@ -59,7 +91,7 @@ window.onload = function () {
         if (!start)
             start = timestamp;
         update(timestamp);
-        draw();
+        render();
         window.requestAnimationFrame(step);
     }
     function findClosestEnemy(origin) {
@@ -74,6 +106,9 @@ window.onload = function () {
         }).enemy : undefined;
     }
     function update(timestamp) {
+        for (const entity of entities) {
+            entity.update();
+        }
         // towers shoot projectiles at enemies
         for (const tower of towers) {
             if (tower.nextShootTime < timestamp) {
@@ -105,7 +140,7 @@ window.onload = function () {
             projectiles[i] = filteredProjectiles[i];
         }
     }
-    function draw() {
+    function render() {
         clear();
         // draw path
         ctx.beginPath();
@@ -154,7 +189,7 @@ window.onload = function () {
         }
     }
     function clear() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0 - 1, 0 - 1, canvas.width + 1, canvas.height + 1);
     }
     // Start the game
     // ==============
@@ -162,24 +197,27 @@ window.onload = function () {
     const enemyPrototype = {
         health: 100,
     };
-    createEnemy(new Enemy(enemyPrototype, { x: 30, y: 30 }));
-    createEnemy(new Enemy(enemyPrototype, { x: 200, y: 200 }));
+    createEnemy(new Enemy(enemyPrototype, { x: 30, y: 30 }, path));
+    createEnemy(new Enemy(enemyPrototype, { x: 200, y: 200 }, path));
     // create towers
     createTower({
         x: 50,
-        y: 50,
+        y: 70,
         shootCooldownMs: 1000,
         nextShootTime: 0,
         damage: 5,
     });
     createTower({
-        x: 250,
+        x: 350,
         y: 200,
-        shootCooldownMs: 1000,
+        shootCooldownMs: 700,
         nextShootTime: 0,
         damage: 5,
     });
     // start the game
     window.requestAnimationFrame(step);
+    // document.addEventListener("keydown", function() {
+    //   step(0)
+    // });
 };
 //# sourceMappingURL=main.js.map
