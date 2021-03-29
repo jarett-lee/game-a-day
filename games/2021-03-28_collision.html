@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <title>Collisions</title>
+</head>
+
+<body>
+    <div>
+        <h1>Collisions part 1 - Wall Collision</h1>
+
+        <p>
+            This collision code is incomplete and buggy. It only works in this specific example.
+        </p>
+        <p>
+            The box moves dx * delta every update, then the update function checks for collisions. If there is a collision, the ball's x velocity reverses. 
+        </p>
+        <p>
+            This does not handle y collisions, angled collisions, and most importantly there's a bug where if the ball moves into the wall with one delta and move out of the wall with less delta, the ball can get caught in the wall.
+        </p>
+
+
+        <canvas id="canv" width="500" height="400" style="border: 1px solid;"></canvas>
+        <script type="text/javascript" src="resources/2021-03-28/main.js" charset="utf-8"></script>
+    </div>
+</body>
+
+</html>
