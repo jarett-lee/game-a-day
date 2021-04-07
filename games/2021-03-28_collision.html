@@ -17,7 +17,7 @@
             The box moves dx * delta every update, then the update function checks for collisions. If there is a collision, the ball's x velocity reverses. 
         </p>
         <p>
-            This does not handle y collisions, angled collisions, and most importantly there's a bug where if the ball moves into the wall with one delta and move out of the wall with less delta, the ball can get caught in the wall.
+            This does not handle y collisions, angled collisions, and most importantly there's a bug where if the ball moves into the wall with one delta and move out of the wall with less delta, the ball can get caught in the wall. Also, try switching tabs. The balls can jump huge distances since I use the timestamp difference to calculate where the balls should be without looking for collisions or breaking the physics logic into discrete time steps.
         </p>
 
 
