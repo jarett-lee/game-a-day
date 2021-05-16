@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Collisions</title>
+  </head>
+
+  <body>
+    <div>
+      <h1>Collisions part 2</h1>
+
+      <li>Previous: <a href="2021-03-28_collision.html">2021-03-28</a></li>
+      <li>Next: <a href="">TODO</a></li>
+
+      <p>
+        Here, I wanted to demonstrate why the previous collision code didn't
+        work properly. Here's a simplified version code I use to animate the
+        movement:
+      </p>
+      <pre>class Ball implements Entity {
+  update(_: number, delta: number) {
+    this.x += this.dx * delta
+  }
+}
+
+function update(timestamp: number, delta: number) {
+  entities.forEach(e => e.update(timestamp, delta))
+  updateCollisions()
+}
+
+let start: number
+let previous: number
+function step(timestamp: number) {
+  if (!start) {
+    start = timestamp
+    previous = timestamp
+  }
+  const delta = timestamp - previous
+  update(timestamp, delta)
+  draw()
+  previous = timestamp window.requestAnimationFrame(step)
+}
+
+window.requestAnimationFrame(step)</pre>
+
+      <form id="controller">
+        <label for="delta">Delta:</label>
+        <input type="number" id="delta" name="delta">
+        <input type="submit" value="step" name="step">
+        <input type="submit" value="play" name="play">
+      </form>
+      <canvas
+        id="canv"
+        width="500"
+        height="400"
+        style="border: 1px solid"
+      ></canvas>
+
+      <p>
+        The project feels like it's rapidly getting out of hand with all the features I want. How will I organize all of this stuff?
+      </p>
+
+      <ul>
+        <li>Step by x milliseconds</li>
+        <li>Play by x milliseconds every x milliseconds</li>
+        <li>Pause</li>
+        <li>Reset</li>
+        <li>Comparison between a variable time step game loop a fixed time step game loop</li>
+        <li>Demonstrations for <a href="http://gameprogrammingpatterns.com/game-loop.html">Game Programming Patterns</a></li>
+        <li>Take structure notes from <a href="https://github.com/ncase/polygons">Nicky Case</a> and <a href="https://explorabl.es/">Explorable Explanations</a>, both of which has really nice structures</li>
+      </ul>
+
+      <script
+        type="text/javascript"
+        src="resources/2021-04-10/main.js"
+        charset="utf-8"
+      ></script>
+    </div>
+  </body>
+</html>
